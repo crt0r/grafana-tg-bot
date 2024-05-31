@@ -1,0 +1,18 @@
+{
+    "name": "grafana-tg-bot",
+    "version": "0.0.1",
+    "description": "",
+    "main": "build/main.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node build/main.js",
+        "bot": "pnpm run -s build && pnpm -s run start"
+    },
+    "author": "Timofey Chuchkanov",
+    "license": "0BSD",
+    "devDependencies": {
+        "prettier": "3.2.5",
+        "prettier-plugin-toml": "^2.0.1",
+        "typescript": "^5.4.5"
+    }
+}
