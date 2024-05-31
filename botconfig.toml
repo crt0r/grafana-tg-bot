@@ -1,0 +1,5 @@
+[bot.acl]
+allow_tg_uid = [0]
+
+[bot.options]
+tg_token = ""
