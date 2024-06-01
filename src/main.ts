@@ -1,1 +1,3 @@
-console.log('Hello, TypeScript on Node.js!');
+import { logger } from './log.js';
+
+logger.info({ message: 'Hello, Pino!' });
