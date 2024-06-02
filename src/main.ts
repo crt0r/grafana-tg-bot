@@ -1,19 +1,6 @@
-import { logger } from './log.js';
 import { BotConfig, loadConfig } from './config.js';
 import { Bot } from 'grammy';
-
-let config = (await loadConfig(true)) as BotConfig;
-let bot = new Bot(config.bot.options.tg_token);
-
-process.on('SIGHUP', reloadConfig);
-
-process.on('SIGINT', async () => {
-    await stopBot(bot);
-});
-
-process.on('SIGTERM', async () => {
-    await stopBot(bot);
-});
+import { startBot, stopBot, attachBotCallbacks } from './bot.js';
 
 async function reloadConfig() {
     const newConfig = await loadConfig(false);
@@ -24,46 +11,17 @@ async function reloadConfig() {
         bot = new Bot(config.bot.options.tg_token);
 
         await stopBot(oldBot);
-        attachBotCallbacks(bot);
+        attachBotCallbacks(config, bot);
         await startBot(bot);
     }
 }
 
-function isUserAllowed(userId: number): boolean {
-    return config.bot.acl.allow_tg_uid.includes(userId);
-}
+let config = (await loadConfig(true)) as BotConfig;
+let bot = new Bot(config.bot.options.tg_token);
 
-function attachBotCallbacks(bot: Bot) {
-    bot.command('start', async ctx => {
-        const facility = '/start';
-        const userId = ctx.chatId;
-        let reply;
+process.on('SIGHUP', reloadConfig);
 
-        if (isUserAllowed(userId)) {
-            reply = await ctx.reply('hi');
-            logger.info({ facility, message: `authenticated request by allowed user` });
-        } else {
-            reply = await ctx.reply('not allowed');
-            logger.error({ facility, message: `unauthenticated request by disallowed user <${ctx.chatId}>` });
-        }
+['SIGINT', 'SIGTERM'].forEach(signal => process.on(signal, async () => await stopBot(bot)));
 
-        return reply;
-    });
-
-    bot.catch(ctx => {
-        logger.error({ facility: 'grammy', message: ctx.error });
-    });
-}
-
-async function startBot(bot: Bot) {
-    logger.info({ facility: startBot.name, message: 'starting bot' });
-    await bot.start();
-}
-
-async function stopBot(bot: Bot) {
-    logger.info({ facility: stopBot.name, message: 'stopping bot' });
-    await bot.stop();
-}
-
-attachBotCallbacks(bot);
+attachBotCallbacks(config, bot);
 await startBot(bot);
