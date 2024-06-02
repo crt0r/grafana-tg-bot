@@ -1,14 +1,51 @@
-import { z } from 'zod';
+import { logger } from './log.js';
+import fs from 'node:fs/promises';
+import process from 'node:process';
+import toml from 'toml';
+import Joi from 'joi';
 
-const botConfigSchema = z.object({
-    bot: z.object({
-        acl: z.object({
-            allow_tg_uid: z.array(z.number().int()),
+export type BotConfig = {
+    bot: {
+        acl: {
+            allow_tg_uid: Array<number>;
+        };
+        options: {
+            tg_token: string;
+        };
+    };
+};
+
+const configPath = `${process.cwd()}/botconfig.toml`;
+
+const configSchema = Joi.object({
+    bot: Joi.object({
+        acl: Joi.object({
+            allow_tg_uid: Joi.array().items(Joi.number().integer().positive()),
         }),
-        options: z.object({
-            tg_token: z.string(),
+        options: Joi.object({
+            tg_token: Joi.string(),
         }),
     }),
 });
 
-export type BotConfig = z.infer<typeof botConfigSchema>;
+export async function loadConfig(canBeFatal: boolean): Promise<BotConfig | null> {
+    let fileContent: string;
+    let botConfig: BotConfig | null = null;
+
+    try {
+        logger.info({ facility: loadConfig.name, message: 'loading config' });
+        fileContent = await fs.readFile(configPath, { encoding: 'utf-8' });
+        const tomlParsed = toml.parse(fileContent);
+        botConfig = (await configSchema.validateAsync(tomlParsed)) as unknown as BotConfig;
+    } catch (e: any) {
+        const errorMessage = { facility: loadConfig.name, message: e.message };
+        if (canBeFatal) {
+            logger.fatal(errorMessage);
+            process.exit(1);
+        } else {
+            logger.error(errorMessage);
+        }
+    }
+
+    return botConfig;
+}

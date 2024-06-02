@@ -1,5 +1,5 @@
 [bot.acl]
-allow_tg_uid = [0]
+allow_tg_uid = [1000]
 
 [bot.options]
-tg_token = ""
+tg_token = "token"
