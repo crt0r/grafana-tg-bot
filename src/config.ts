@@ -35,10 +35,10 @@ export async function loadConfig(canBeFatal: boolean): Promise<BotConfig | null>
     let botConfig: BotConfig | null = null;
 
     try {
-        logger.info({ facility: loadConfig.name, message: 'loading config' });
         fileContent = await fs.readFile(configPath, { encoding: 'utf-8' });
         const tomlParsed = toml.parse(fileContent);
         botConfig = (await configSchema.validateAsync(tomlParsed)) as unknown as BotConfig;
+        logger.info({ facility: loadConfig.name, message: 'loaded config' });
     } catch (e: any) {
         const errorMessage = { facility: loadConfig.name, message: e.message };
         if (canBeFatal) {

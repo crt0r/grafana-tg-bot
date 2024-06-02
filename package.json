@@ -20,6 +20,7 @@
     "dependencies": {
         "@types/node": "^20.12.13",
         "dayjs": "^1.11.11",
+        "grammy": "^1.24.0",
         "joi": "^17.13.1",
         "pino": "^9.1.0",
         "pino-logfmt": "^0.0.4",

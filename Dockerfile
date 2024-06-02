@@ -16,4 +16,4 @@ COPY . .
 
 RUN pnpm build
 
-ENTRYPOINT [ "pnpm", "-s", "start" ]
+ENTRYPOINT [ "node", "build/main.js" ]
