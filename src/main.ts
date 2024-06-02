@@ -1,6 +1,6 @@
 import { BotConfig, loadConfig } from './config.js';
-import { Bot } from 'grammy';
 import { startBot, stopBot, attachBotCallbacks } from './bot.js';
+import { Bot } from 'grammy';
 
 async function reloadConfig() {
     const newConfig = await loadConfig(false);
