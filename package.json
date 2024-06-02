@@ -7,6 +7,7 @@
     "scripts": {
         "build": "rm -rf build/ || true && tsc",
         "start": "node build/main.js",
+        "reload": "kill -HUP $(pidof node)",
         "dev": "pnpm -s build && pnpm -s start"
     },
     "author": "Timofey Chuchkanov",
