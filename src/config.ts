@@ -15,7 +15,9 @@ export type BotConfig = {
     };
 };
 
-const configPath = `${process.cwd()}/botconfig.toml`;
+const defaultConfigPath = `${process.cwd()}/botconfig.toml`;
+const botConfigEnv = process.env['BOTCONFIG'];
+let configPath = botConfigEnv ? botConfigEnv : defaultConfigPath;
 
 const configSchema = Joi.object({
     bot: Joi.object({
