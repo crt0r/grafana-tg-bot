@@ -20,21 +20,21 @@ export async function getBotUsername(bot: Bot): Promise<string> {
     return botUser.username;
 }
 
-export function attachBotCallbacks(botUserName: string, config: BotConfig, bot: Bot, cache: Cache) {
-    const filterGroup = (ctx: CommandContext<Context>) => determineChatType(ctx) == 'group';
-    const filterPersonal = (ctx: CommandContext<Context>) => determineChatType(ctx) == 'personal';
-    const filterAuthRequest = (command: string) => (ctx: CommandContext<Context>) =>
+export function attachBotMiddlewares(botUserName: string, config: BotConfig, bot: Bot, cache: Cache) {
+    const group = (ctx: CommandContext<Context>) => determineChatType(ctx) == 'group';
+    const personal = (ctx: CommandContext<Context>) => determineChatType(ctx) == 'personal';
+    const authRequest = (command: string) => (ctx: CommandContext<Context>) =>
         authenticateRequest(config, ctx, command);
 
     bot.command(`start@${botUserName}`)
-        .filter(filterGroup)
-        .filter(filterAuthRequest(`start@${botUserName}`), subscribeChat(cache));
+        .filter(group)
+        .filter(authRequest(`start@${botUserName}`), subscribeChat(cache));
     bot.command(`stop@${botUserName}`)
-        .filter(filterGroup)
-        .filter(filterAuthRequest(`stop@${botUserName}`), unsubscribeChat(cache));
+        .filter(group)
+        .filter(authRequest(`stop@${botUserName}`), unsubscribeChat(cache));
 
-    bot.command('start').filter(filterPersonal).filter(filterAuthRequest('start'), subscribeChat(cache));
-    bot.command('stop').filter(filterPersonal).filter(filterAuthRequest('stop'), unsubscribeChat(cache));
+    bot.command('start').filter(personal).filter(authRequest('start'), subscribeChat(cache));
+    bot.command('stop').filter(personal).filter(authRequest('stop'), unsubscribeChat(cache));
 }
 
 function subscribeChat(cache: Cache) {

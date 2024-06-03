@@ -1,5 +1,5 @@
 import { BotConfig, loadConfig } from './config.js';
-import { getBotUsername, startBot, stopBot, attachBotCallbacks } from './bot.js';
+import { getBotUsername, startBot, stopBot, attachBotMiddlewares } from './bot.js';
 import { Cache } from './cache.js';
 import { Bot } from 'grammy';
 
@@ -17,7 +17,7 @@ async function reloadConfig() {
         await stopBot(oldBot, reloadConfig.name);
         await oldCache.quit(reloadConfig.name);
 
-        attachBotCallbacks(botUserName, config, bot, cache);
+        attachBotMiddlewares(botUserName, config, bot, cache);
         await cache.connect(reloadConfig.name);
         await startBot(bot, reloadConfig.name);
     }
@@ -37,6 +37,6 @@ process.on('SIGHUP', reloadConfig);
     }),
 );
 
-attachBotCallbacks(botUserName, config, bot, cache);
+attachBotMiddlewares(botUserName, config, bot, cache);
 await cache.connect();
 await startBot(bot);
