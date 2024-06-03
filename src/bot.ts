@@ -1,5 +1,6 @@
 import { logger } from './log.js';
-import { type BotConfig } from './config.js';
+import { BotConfig } from './config.js';
+import { Cache } from './cache.js';
 import { Bot, CommandContext, Context } from 'grammy';
 
 type ChatType = 'group' | 'personal';
@@ -19,20 +20,51 @@ export async function getBotUsername(bot: Bot): Promise<string> {
     return botUser.username;
 }
 
-export function attachBotCallbacks(botUserName: string, config: BotConfig, bot: Bot) {
-    bot.command(`start@${botUserName}`)
-        .filter(ctx => determineChatType(ctx) == 'group')
-        .filter(
-            ctx => authenticateRequest(config, ctx, `start@${botUserName}`),
-            async ctx => await ctx.reply('hi'),
-        );
+export function attachBotCallbacks(botUserName: string, config: BotConfig, bot: Bot, cache: Cache) {
+    const filterGroup = (ctx: CommandContext<Context>) => determineChatType(ctx) == 'group';
+    const filterPersonal = (ctx: CommandContext<Context>) => determineChatType(ctx) == 'personal';
+    const filterAuthRequest = (command: string) => (ctx: CommandContext<Context>) =>
+        authenticateRequest(config, ctx, command);
 
-    bot.command('start')
-        .filter(ctx => determineChatType(ctx) == 'personal')
-        .filter(
-            ctx => authenticateRequest(config, ctx, 'start'),
-            async ctx => await ctx.reply('hi'),
-        );
+    bot.command(`start@${botUserName}`)
+        .filter(filterGroup)
+        .filter(filterAuthRequest(`start@${botUserName}`), subscribeChat(cache));
+
+    bot.command('start').filter(filterPersonal).filter(filterAuthRequest('start'), subscribeChat(cache));
+
+    bot.command(`stop@${botUserName}`)
+        .filter(filterGroup)
+        .filter(filterAuthRequest(`stop@${botUserName}`), unsubscribeChat(cache));
+
+    bot.command('stop').filter(filterPersonal).filter(filterAuthRequest('stop'), unsubscribeChat(cache));
+}
+
+function subscribeChat(cache: Cache) {
+    return async (ctx: CommandContext<Context>) => {
+        const isAlreadySubscribed = await cache.isChatSubscribedToAlerts(ctx.chatId);
+
+        if (!isAlreadySubscribed) {
+            const reply = await ctx.reply('This chat is now subscribed to Grafana alerts.');
+            await cache.addSubscriberChat(ctx.chatId);
+            return reply;
+        } else {
+            return await ctx.reply('This chat is already subscribed to Grafana alerts.');
+        }
+    };
+}
+
+function unsubscribeChat(cache: Cache) {
+    return async (ctx: CommandContext<Context>) => {
+        const isAlreadySubscribed = await cache.isChatSubscribedToAlerts(ctx.chatId);
+
+        if (isAlreadySubscribed) {
+            const reply = await ctx.reply('This chat will no longer receive Grafana alerts.');
+            await cache.delSubscriberChat(ctx.chatId);
+            return reply;
+        } else {
+            return ctx.reply('This chat is not subscribed to Grafana alerts yet.');
+        }
+    };
 }
 
 function authenticateRequest(config: BotConfig, ctx: CommandContext<Context>, facility = 'filter'): boolean {

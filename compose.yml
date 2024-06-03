@@ -1,7 +1,7 @@
 services:
   grafana-tg-bot:
-    image: grafana-tg-bot
-    pull_policy: build
+    env_file:
+    - .env
     restart: unless-stopped
     build:
       context: .
@@ -9,3 +9,17 @@ services:
     - ALL
     volumes:
     - ./config:/app/config:ro
+
+  cache:
+    env_file:
+    - .env
+    image: valkey/valkey:7.2.5-alpine3.19
+    pull_policy: missing
+    restart: unless-stopped
+    cap_add:
+    - ALL
+    volumes:
+    - cache-data:/data
+
+volumes:
+  cache-data:

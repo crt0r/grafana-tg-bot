@@ -1,5 +1,6 @@
 import { BotConfig, loadConfig } from './config.js';
 import { getBotUsername, startBot, stopBot, attachBotCallbacks } from './bot.js';
+import { Cache } from './cache.js';
 import { Bot } from 'grammy';
 
 async function reloadConfig() {
@@ -8,21 +9,34 @@ async function reloadConfig() {
     if (newConfig) {
         config = newConfig;
         const oldBot = bot;
+        const oldCache = cache;
+
         bot = new Bot(config.bot.options.tg_token);
+        cache = new Cache(config);
 
         await stopBot(oldBot, reloadConfig.name);
-        attachBotCallbacks(botUserName, config, bot);
+        await oldCache.quit(reloadConfig.name);
+
+        attachBotCallbacks(botUserName, config, bot, cache);
+        await cache.connect(reloadConfig.name);
         await startBot(bot, reloadConfig.name);
     }
 }
 
 let config = (await loadConfig(true)) as BotConfig;
+let cache = new Cache(config);
 let bot = new Bot(config.bot.options.tg_token);
 let botUserName = await getBotUsername(bot);
 
 process.on('SIGHUP', reloadConfig);
 
-['SIGINT', 'SIGTERM'].forEach(signal => process.on(signal, async () => await stopBot(bot)));
+['SIGINT', 'SIGTERM'].forEach(signal =>
+    process.on(signal, async () => {
+        await stopBot(bot);
+        await cache.quit();
+    }),
+);
 
-attachBotCallbacks(botUserName, config, bot);
+attachBotCallbacks(botUserName, config, bot, cache);
+await cache.connect();
 await startBot(bot);

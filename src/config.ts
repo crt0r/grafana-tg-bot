@@ -5,6 +5,11 @@ import toml from 'toml';
 import Joi from 'joi';
 
 export type BotConfig = {
+    cache: {
+        server: {
+            url: string;
+        };
+    };
     bot: {
         acl: {
             allow_tg_uid: Array<number>;
@@ -20,6 +25,11 @@ const botConfigEnv = process.env['BOTCONFIG'];
 let configPath = botConfigEnv ? botConfigEnv : defaultConfigPath;
 
 const configSchema = Joi.object({
+    cache: Joi.object({
+        server: Joi.object({
+            url: Joi.string(),
+        }),
+    }),
     bot: Joi.object({
         acl: Joi.object({
             allow_tg_uid: Joi.array().items(Joi.number().integer().positive()),

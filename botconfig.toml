@@ -3,3 +3,6 @@ allow_tg_uid = [1000]
 
 [bot.options]
 tg_token = "token"
+
+[cache.server]
+url = "redis://cache:6379"
