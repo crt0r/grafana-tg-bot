@@ -29,13 +29,11 @@ export function attachBotCallbacks(botUserName: string, config: BotConfig, bot: 
     bot.command(`start@${botUserName}`)
         .filter(filterGroup)
         .filter(filterAuthRequest(`start@${botUserName}`), subscribeChat(cache));
-
-    bot.command('start').filter(filterPersonal).filter(filterAuthRequest('start'), subscribeChat(cache));
-
     bot.command(`stop@${botUserName}`)
         .filter(filterGroup)
         .filter(filterAuthRequest(`stop@${botUserName}`), unsubscribeChat(cache));
 
+    bot.command('start').filter(filterPersonal).filter(filterAuthRequest('start'), subscribeChat(cache));
     bot.command('stop').filter(filterPersonal).filter(filterAuthRequest('stop'), unsubscribeChat(cache));
 }
 
