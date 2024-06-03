@@ -15,7 +15,7 @@ export type BotConfig = {
     };
 };
 
-const defaultConfigPath = `${process.cwd()}/botconfig.toml`;
+const defaultConfigPath = `${process.cwd()}/config/botconfig.toml`;
 const botConfigEnv = process.env['BOTCONFIG'];
 let configPath = botConfigEnv ? botConfigEnv : defaultConfigPath;
 

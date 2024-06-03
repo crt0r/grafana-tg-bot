@@ -1,0 +1,11 @@
+services:
+  grafana-tg-bot:
+    image: grafana-tg-bot
+    pull_policy: build
+    restart: unless-stopped
+    build:
+      context: .
+    cap_drop:
+    - ALL
+    volumes:
+    - ./config:/app/config:ro
