@@ -25,37 +25,49 @@ export function attachBotMiddlewares(botUserName: string, config: BotConfig, bot
     const personal = (ctx: CommandContext<Context>) => determineChatType(ctx) == 'personal';
     const authRequest = (ctx: CommandContext<Context>) => authenticateRequest(config, ctx);
 
-    bot.command(`start@${botUserName}`).filter(group).filter(authRequest, subscribeChat(cache));
-    bot.command(`stop@${botUserName}`).filter(group).filter(authRequest, unsubscribeChat(cache));
+    bot.command(`start@${botUserName}`).filter(group).filter(authRequest, subscribeChat(cache, true));
+    bot.command(`stop@${botUserName}`).filter(group).filter(authRequest, unsubscribeChat(cache, true));
 
     bot.command('start').filter(personal).filter(authRequest, subscribeChat(cache));
     bot.command('stop').filter(personal).filter(authRequest, unsubscribeChat(cache));
 }
 
-function subscribeChat(cache: Cache) {
+function subscribeChat(cache: Cache, replyTo = false) {
     return async (ctx: CommandContext<Context>) => {
         const isAlreadySubscribed = await cache.isChatSubscribedToAlerts(ctx.chatId);
 
         if (!isAlreadySubscribed) {
-            const reply = await ctx.reply('This chat is now subscribed to Grafana alerts.');
+            const reply = await ctx.reply(
+                'This chat is now subscribed to Grafana alerts.',
+                replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {},
+            );
             await cache.addSubscriberChat(ctx.chatId);
             return reply;
         } else {
-            return await ctx.reply('This chat is already subscribed to Grafana alerts.');
+            return await ctx.reply(
+                'This chat is already subscribed to Grafana alerts.',
+                replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {},
+            );
         }
     };
 }
 
-function unsubscribeChat(cache: Cache) {
+function unsubscribeChat(cache: Cache, replyTo = false) {
     return async (ctx: CommandContext<Context>) => {
         const isAlreadySubscribed = await cache.isChatSubscribedToAlerts(ctx.chatId);
 
         if (isAlreadySubscribed) {
-            const reply = await ctx.reply('This chat will no longer receive Grafana alerts.');
+            const reply = await ctx.reply(
+                'This chat will no longer receive Grafana alerts.',
+                replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {},
+            );
             await cache.delSubscriberChat(ctx.chatId);
             return reply;
         } else {
-            return ctx.reply('This chat is not subscribed to Grafana alerts yet.');
+            return ctx.reply(
+                'This chat is not subscribed to Grafana alerts yet.',
+                replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {},
+            );
         }
     };
 }
