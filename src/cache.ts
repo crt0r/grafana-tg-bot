@@ -27,7 +27,10 @@ export class Cache {
     }
 
     async quit() {
-        return await this.client.quit();
+        // Prevent crash on stop when cache is not available
+        try {
+            return await this.client.quit();
+        } catch (_) {}
     }
 
     async addSubscriberChat(chatId: number) {
