@@ -4,6 +4,8 @@ import process from 'node:process';
 import toml from 'toml';
 import Joi from 'joi';
 
+const facility = 'config';
+
 export type BotConfig = {
     cache: {
         server: {
@@ -48,9 +50,9 @@ export async function loadConfig(canBeFatal: boolean): Promise<BotConfig | null>
         fileContent = await fs.readFile(configPath, { encoding: 'utf-8' });
         const tomlParsed = toml.parse(fileContent);
         botConfig = (await configSchema.validateAsync(tomlParsed)) as unknown as BotConfig;
-        logger.info({ facility: loadConfig.name, message: 'loaded config' });
+        logger.info({ facility, message: 'loaded config' });
     } catch (e: any) {
-        const errorMessage = { facility: loadConfig.name, message: e.message };
+        const errorMessage = { facility, message: e.message };
         if (canBeFatal) {
             logger.fatal(errorMessage);
             process.exit(1);

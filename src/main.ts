@@ -14,12 +14,12 @@ async function reloadConfig() {
         bot = new Bot(config.bot.options.tg_token);
         cache = new Cache(config);
 
-        await stopBot(oldBot, reloadConfig.name);
-        await oldCache.quit(reloadConfig.name);
+        await stopBot(oldBot);
+        await oldCache.quit();
 
         attachBotMiddlewares(botUserName, config, bot, cache);
-        await cache.connect(reloadConfig.name);
-        await startBot(bot, reloadConfig.name);
+        await cache.connect();
+        startBot(bot);
     }
 }
 
@@ -39,4 +39,4 @@ process.on('SIGHUP', reloadConfig);
 
 attachBotMiddlewares(botUserName, config, bot, cache);
 await cache.connect();
-await startBot(bot);
+startBot(bot);

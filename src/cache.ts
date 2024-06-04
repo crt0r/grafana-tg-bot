@@ -9,18 +9,24 @@ export class Cache {
     private client;
 
     constructor(botConfig: BotConfig) {
+        const facility = this.facility;
+
         this.client = createClient({
             url: botConfig.cache.server.url,
-        }).on('error', err => logger.error({ facility: this.facility, message: err.message }));
+        });
+
+        this.client
+            .on('error', err => logger.error({ facility, message: err.message }))
+            .on('connect', _ => logger.info({ facility, message: 'connecting to cache' }))
+            .on('ready', _ => logger.info({ facility, message: 'cache is ready' }))
+            .on('end', _ => logger.info({ facility, message: 'disconnecting from cache' }));
     }
 
-    async connect(facility = this.facility) {
-        logger.info({ facility, message: 'connecting to cache' });
+    async connect() {
         await this.client.connect();
     }
 
-    async quit(facility = this.facility) {
-        logger.info({ facility, message: 'disconnecting from cache' });
+    async quit() {
         return await this.client.quit();
     }
 

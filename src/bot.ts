@@ -3,10 +3,10 @@ import { BotConfig } from './config.js';
 import { Cache } from './cache.js';
 import { Bot, CommandContext, Context } from 'grammy';
 
+const facility = 'bot';
 type ChatType = 'group' | 'personal';
 
 export async function getBotUsername(bot: Bot): Promise<string> {
-    const facility = getBotUsername.name;
     let botUser;
 
     try {
@@ -23,18 +23,13 @@ export async function getBotUsername(bot: Bot): Promise<string> {
 export function attachBotMiddlewares(botUserName: string, config: BotConfig, bot: Bot, cache: Cache) {
     const group = (ctx: CommandContext<Context>) => determineChatType(ctx) == 'group';
     const personal = (ctx: CommandContext<Context>) => determineChatType(ctx) == 'personal';
-    const authRequest = (command: string) => (ctx: CommandContext<Context>) =>
-        authenticateRequest(config, ctx, command);
+    const authRequest = (ctx: CommandContext<Context>) => authenticateRequest(config, ctx);
 
-    bot.command(`start@${botUserName}`)
-        .filter(group)
-        .filter(authRequest(`start@${botUserName}`), subscribeChat(cache));
-    bot.command(`stop@${botUserName}`)
-        .filter(group)
-        .filter(authRequest(`stop@${botUserName}`), unsubscribeChat(cache));
+    bot.command(`start@${botUserName}`).filter(group).filter(authRequest, subscribeChat(cache));
+    bot.command(`stop@${botUserName}`).filter(group).filter(authRequest, unsubscribeChat(cache));
 
-    bot.command('start').filter(personal).filter(authRequest('start'), subscribeChat(cache));
-    bot.command('stop').filter(personal).filter(authRequest('stop'), unsubscribeChat(cache));
+    bot.command('start').filter(personal).filter(authRequest, subscribeChat(cache));
+    bot.command('stop').filter(personal).filter(authRequest, unsubscribeChat(cache));
 }
 
 function subscribeChat(cache: Cache) {
@@ -65,7 +60,7 @@ function unsubscribeChat(cache: Cache) {
     };
 }
 
-function authenticateRequest(config: BotConfig, ctx: CommandContext<Context>, facility = 'filter'): boolean {
+function authenticateRequest(config: BotConfig, ctx: CommandContext<Context>): boolean {
     const chatType: ChatType = determineChatType(ctx);
     const userId = ctx.chatId;
     const from = ctx.from;
@@ -105,12 +100,12 @@ function authenticateRequest(config: BotConfig, ctx: CommandContext<Context>, fa
     if (isRequestAuthenticated) {
         logger.info({
             facility,
-            message: `authenticated request by allowed user <${allowedUser}> in chat <${ctx.chatId}>`,
+            message: `authenticated request <${ctx.message?.text}> by allowed user <${allowedUser}> in chat <${ctx.chatId}>`,
         });
     } else {
         logger.error({
             facility,
-            message: `unauthenticated request by disallowed user <${disallowedUser}> in chat <${ctx.chatId}>`,
+            message: `unauthenticated request <${ctx.message?.text}> by disallowed user <${disallowedUser}> in chat <${ctx.chatId}>`,
         });
     }
 
@@ -121,12 +116,12 @@ function determineChatType(ctx: CommandContext<Context>): ChatType {
     return ctx.chatId > 0 ? 'personal' : 'group';
 }
 
-export async function startBot(bot: Bot, facility = startBot.name) {
+export async function startBot(bot: Bot) {
     logger.info({ facility, message: 'starting bot' });
     await bot.start();
 }
 
-export async function stopBot(bot: Bot, facility = stopBot.name) {
+export async function stopBot(bot: Bot) {
     logger.info({ facility, message: 'stopping bot' });
     await bot.stop();
 }
