@@ -37,17 +37,11 @@ function subscribeChat(cache: Cache, replyTo = false) {
         const isAlreadySubscribed = await cache.isChatSubscribedToAlerts(ctx.chatId);
 
         if (!isAlreadySubscribed) {
-            const reply = await ctx.reply(
-                'This chat is now subscribed to Grafana alerts.',
-                replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {},
-            );
+            const reply = await ctx.reply('This chat is now subscribed to Grafana alerts.', withReplyTo(ctx, replyTo));
             await cache.addSubscriberChat(ctx.chatId);
             return reply;
         } else {
-            return await ctx.reply(
-                'This chat is already subscribed to Grafana alerts.',
-                replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {},
-            );
+            return await ctx.reply('This chat is already subscribed to Grafana alerts.', withReplyTo(ctx, replyTo));
         }
     };
 }
@@ -59,17 +53,18 @@ function unsubscribeChat(cache: Cache, replyTo = false) {
         if (isAlreadySubscribed) {
             const reply = await ctx.reply(
                 'This chat will no longer receive Grafana alerts.',
-                replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {},
+                withReplyTo(ctx, replyTo),
             );
             await cache.delSubscriberChat(ctx.chatId);
             return reply;
         } else {
-            return ctx.reply(
-                'This chat is not subscribed to Grafana alerts yet.',
-                replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {},
-            );
+            return ctx.reply('This chat is not subscribed to Grafana alerts yet.', withReplyTo(ctx, replyTo));
         }
     };
+}
+
+function withReplyTo(ctx: CommandContext<Context>, replyTo: boolean) {
+    return replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {};
 }
 
 function authenticateRequest(config: BotConfig, ctx: CommandContext<Context>): boolean {
