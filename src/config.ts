@@ -7,6 +7,13 @@ import Joi from 'joi';
 const facility = 'config';
 
 export type BotConfig = {
+    webhook: {
+        server: {
+            host: string;
+            port: number;
+            endpoint: string;
+        };
+    };
     cache: {
         server: {
             url: string;
@@ -27,6 +34,13 @@ const botConfigEnv = process.env['BOTCONFIG'];
 let configPath = botConfigEnv ? botConfigEnv : defaultConfigPath;
 
 const configSchema = Joi.object({
+    webhook: Joi.object({
+        server: Joi.object({
+            host: Joi.string(),
+            port: Joi.number().integer().positive(),
+            endpoint: Joi.string(),
+        }),
+    }),
     cache: Joi.object({
         server: Joi.object({
             url: Joi.string(),
