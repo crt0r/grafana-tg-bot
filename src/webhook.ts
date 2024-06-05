@@ -25,6 +25,8 @@ export class WebhookServer extends Server {
             const requestUrl = req.url;
             const client = req.socket.address() as AddressInfo;
             const method = req.method;
+            const requestBodyParts: Buffer[] = [];
+            let requestBody: any;
 
             res.setHeader('Content-Type', 'application/json');
 
@@ -33,7 +35,7 @@ export class WebhookServer extends Server {
                 res.end(JSON.stringify({ error: 'Method not allowed.' }));
                 logger.error({
                     facility: this.facility,
-                    message: `client <${client.address}> send request using disallowed method <${method}>`,
+                    message: `client <${client.address}> sent request using disallowed method <${method}>`,
                 });
                 return;
             }
@@ -48,11 +50,31 @@ export class WebhookServer extends Server {
                 return;
             }
 
-            res.statusCode = 200;
-            res.end(JSON.stringify({ message: 'OK.' }));
-            logger.info({
-                facility: this.facility,
-                message: `client <${client.address}> requested endpoint <${requestUrl}>`,
+            req.on('data', (chunk: Buffer) => {
+                requestBodyParts.push(chunk);
+            });
+
+            req.on('end', () => {
+                try {
+                    requestBody = JSON.parse(Buffer.concat(requestBodyParts).toString());
+                } catch (e: any) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'valid json expected.' }));
+                    logger.error({
+                        facility: this.facility,
+                        message: `client <${client.address}> failed to provide valid json`,
+                    });
+                    return;
+                }
+
+                console.log(requestBody);
+
+                res.statusCode = 200;
+                res.end(JSON.stringify({ message: 'ok.' }));
+                logger.info({
+                    facility: this.facility,
+                    message: `client <${client.address}> successfully accessed endpoint <${requestUrl}>`,
+                });
             });
         });
 
