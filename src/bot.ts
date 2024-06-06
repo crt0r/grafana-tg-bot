@@ -46,7 +46,7 @@ export class AlertBot extends Bot {
                 )
                 .join('\n');
             const message = [status, startsAt, endsAt, annotationsItems].join('');
-            console.log(message);
+
             return message;
         });
 
