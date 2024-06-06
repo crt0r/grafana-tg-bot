@@ -14,7 +14,7 @@ async function reloadConfig() {
 
         cache = new Cache(config);
         bot = new AlertBot(config, cache);
-        webHook = new WebhookServer(config);
+        webHook = new WebhookServer(config, bot);
 
         oldWebHook.close();
         await oldBot.stop();
@@ -29,7 +29,7 @@ async function reloadConfig() {
 let config = (await loadConfig(true)) as BotConfig;
 let cache = new Cache(config);
 let bot = new AlertBot(config, cache);
-let webHook = new WebhookServer(config);
+let webHook = new WebhookServer(config, bot);
 
 process.on('SIGHUP', reloadConfig);
 

@@ -30,6 +30,11 @@ export class AlertBot extends Bot {
         logger.info({ facility, message: 'bot stopped' });
     }
 
+    async sendNotifications(alerts: object) {
+        const subscribers = await this.cache.getSubscriberChats();
+        subscribers.forEach(subscriber => this.api.sendMessage(subscriber, JSON.stringify(alerts)));
+    }
+
     private async getUsername(): Promise<string> {
         let botUser;
 

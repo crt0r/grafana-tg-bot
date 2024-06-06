@@ -1,13 +1,14 @@
-import { AddressInfo } from 'node:net';
+import { AlertBot } from './bot.js';
 import { BotConfig } from './config.js';
 import { logger } from './log.js';
+import { AddressInfo } from 'node:net';
 import { Server } from 'node:http';
 
 export class WebhookServer extends Server {
     private readonly facility = 'webhook';
     private config;
 
-    constructor(config: BotConfig) {
+    constructor(config: BotConfig, bot: AlertBot) {
         super();
 
         this.config = config;
@@ -67,7 +68,7 @@ export class WebhookServer extends Server {
                     return;
                 }
 
-                console.log(requestBody);
+                bot.sendNotifications(requestBody);
 
                 res.statusCode = 200;
                 res.end(JSON.stringify({ message: 'ok.' }));

@@ -41,6 +41,11 @@ export class Cache {
         return await this.client.SREM(this.subscribersKey, chatId.toString());
     }
 
+    async getSubscriberChats(): Promise<number[]> {
+        const subscribersStr = await this.client.SMEMBERS(this.subscribersKey);
+        return subscribersStr.map(subscriber => Number.parseInt(subscriber));
+    }
+
     async isChatSubscribedToAlerts(chatId: number) {
         return await this.client.SISMEMBER(this.subscribersKey, chatId.toString());
     }
