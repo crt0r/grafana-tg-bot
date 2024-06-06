@@ -3,9 +3,38 @@ import { BotConfig } from './config.js';
 import { logger } from './log.js';
 import { AddressInfo } from 'node:net';
 import { Server } from 'node:http';
+import Joi from 'joi';
+
+export type Alerts = {
+    alerts: [
+        | {
+              status: string;
+              labels: Record<string, string>;
+              annotations: Record<string, string>;
+              startsAt: Date;
+              endsAt: Date | undefined;
+          }
+        | Record<string, any>,
+    ];
+};
+
+const facility = 'webhook';
+
+const alertSchema = Joi.object({
+    alerts: Joi.array()
+        .items(
+            Joi.object({
+                status: Joi.string().required(),
+                labels: Joi.object().unknown(true).required(),
+                annotations: Joi.object().unknown(true).required(),
+                startsAt: Joi.date().required(),
+                endsAt: Joi.date().optional().required(),
+            }).unknown(true),
+        )
+        .required(),
+}).unknown(true);
 
 export class WebhookServer extends Server {
-    private readonly facility = 'webhook';
     private config;
 
     constructor(config: BotConfig, bot: AlertBot) {
@@ -17,7 +46,7 @@ export class WebhookServer extends Server {
             const { address, port } = this.address() as AddressInfo;
 
             logger.info({
-                facility: this.facility,
+                facility,
                 message: `webhook server listening on ${address}:${port}`,
             });
         });
@@ -35,7 +64,7 @@ export class WebhookServer extends Server {
                 res.statusCode = 405;
                 res.end(JSON.stringify({ error: 'Method not allowed.' }));
                 logger.error({
-                    facility: this.facility,
+                    facility,
                     message: `client <${client.address}> sent request using disallowed method <${method}>`,
                 });
                 return;
@@ -45,7 +74,7 @@ export class WebhookServer extends Server {
                 res.statusCode = 400;
                 res.end(JSON.stringify({ error: 'Wrong endpoint.' }));
                 logger.error({
-                    facility: this.facility,
+                    facility,
                     message: `client <${client.address}> sent request to wrong endpoint <${requestUrl}>`,
                 });
                 return;
@@ -55,33 +84,41 @@ export class WebhookServer extends Server {
                 requestBodyParts.push(chunk);
             });
 
-            req.on('end', () => {
+            req.on('end', async () => {
                 try {
                     requestBody = JSON.parse(Buffer.concat(requestBodyParts).toString());
                 } catch (e: any) {
                     res.statusCode = 400;
-                    res.end(JSON.stringify({ error: 'valid json expected.' }));
+                    res.end(JSON.stringify({ error: 'Valid JSON expected.' }));
                     logger.error({
-                        facility: this.facility,
+                        facility,
                         message: `client <${client.address}> failed to provide valid json`,
                     });
                     return;
                 }
 
-                bot.sendNotifications(requestBody);
+                try {
+                    const validatedAlerts = await alertSchema.validateAsync(requestBody);
+                    bot.sendNotifications(validatedAlerts);
+                } catch (e: any) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: `Invalid JSON schema. ${e.message}.` }));
+                    logger.error({ facility, message: e.message });
+                    return;
+                }
 
                 res.statusCode = 200;
                 res.end(JSON.stringify({ message: 'ok.' }));
                 logger.info({
-                    facility: this.facility,
+                    facility,
                     message: `client <${client.address}> successfully accessed endpoint <${requestUrl}>`,
                 });
             });
         });
 
-        this.on('close', () => logger.info({ facility: this.facility, message: 'webhook server stopped' }));
+        this.on('close', () => logger.info({ facility, message: 'webhook server stopped' }));
 
-        this.on('error', err => logger.error({ facility: this.facility, message: err.message }));
+        this.on('error', err => logger.error({ facility, message: err.message }));
     }
 
     listen() {

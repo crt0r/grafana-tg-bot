@@ -1,3 +1,4 @@
+import { Alerts } from './webhook.js';
 import { logger } from './log.js';
 import { BotConfig } from './config.js';
 import { Cache } from './cache.js';
@@ -30,9 +31,32 @@ export class AlertBot extends Bot {
         logger.info({ facility, message: 'bot stopped' });
     }
 
-    async sendNotifications(alerts: object) {
+    async sendNotifications(alerts: Alerts) {
         const subscribers = await this.cache.getSubscriberChats();
-        subscribers.forEach(subscriber => this.api.sendMessage(subscriber, JSON.stringify(alerts)));
+        const alertMessageBodys = alerts.alerts.map(alert => {
+            const title = `${alert.labels.alertname.trim()}`;
+            const status = `<b>[${alert.status.trim().toUpperCase()}]</b>: ${title}\n`;
+            const startsAt = `<b>[STARTED]</b>: ${alert.startsAt}\n`;
+            const endsAt = alert.endsAt ? `<b>[ENDED]</b>: ${alert.endsAt}\n` : '\n';
+            const annotationsItems = Object.entries(alert.annotations)
+                .sort()
+                .map(
+                    annotation =>
+                        `<b>[${annotation[0].trim().toUpperCase()}]</b>\n${(annotation[1] as string).trim()}\n`,
+                )
+                .join('\n');
+            const message = [status, startsAt, endsAt, annotationsItems].join('\n');
+            console.log(message);
+            return message;
+        });
+
+        subscribers.forEach(subscriber =>
+            alertMessageBodys.forEach(messageBody =>
+                this.api.sendMessage(subscriber, messageBody, {
+                    parse_mode: 'HTML',
+                }),
+            ),
+        );
     }
 
     private async getUsername(): Promise<string> {
