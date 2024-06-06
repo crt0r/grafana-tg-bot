@@ -1,12 +1,11 @@
 import { logger } from './log.js';
-
+import { BotConfig } from './config.js';
 import { createClient } from '@redis/client';
-import { type BotConfig } from './config.js';
 
 export class Cache {
-    private facility = 'cache';
-    private subscribersKey = 'alert_subscribers';
-    private client;
+    private readonly facility = 'cache';
+    private readonly subscribersKey = 'alert_subscribers';
+    private readonly client;
 
     constructor(botConfig: BotConfig) {
         const facility = this.facility;

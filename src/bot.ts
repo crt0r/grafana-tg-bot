@@ -8,8 +8,8 @@ type ChatType = 'group' | 'personal';
 const facility = 'bot';
 
 export class AlertBot extends Bot {
-    private config;
-    private cache;
+    private readonly config;
+    private readonly cache;
     private userName: string | null = null;
 
     constructor(config: BotConfig, cache: Cache) {
@@ -77,7 +77,7 @@ export class AlertBot extends Bot {
         const filters = {
             groupChat: (ctx: CommandContext<Context>) => this.determineChatType(ctx) == 'group',
             personalChat: (ctx: CommandContext<Context>) => this.determineChatType(ctx) == 'personal',
-            authRequest: (ctx: CommandContext<Context>) => this.authenticateRequest(this.config, ctx),
+            authRequest: (ctx: CommandContext<Context>) => this.authenticateRequest(ctx),
         };
 
         this.command(`start@${this.userName}`)
@@ -132,7 +132,7 @@ export class AlertBot extends Bot {
         return replyTo ? { reply_parameters: { message_id: ctx.msg.message_id } } : {};
     }
 
-    private authenticateRequest(config: BotConfig, ctx: CommandContext<Context>): boolean {
+    private authenticateRequest(ctx: CommandContext<Context>): boolean {
         const chatType: ChatType = this.determineChatType(ctx);
         const userId = ctx.chatId;
         const from = ctx.from;

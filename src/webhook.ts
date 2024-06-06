@@ -28,14 +28,14 @@ const alertSchema = Joi.object({
                 labels: Joi.object().unknown(true).required(),
                 annotations: Joi.object().unknown(true).required(),
                 startsAt: Joi.date().required(),
-                endsAt: Joi.date().optional().required(),
+                endsAt: Joi.date().required(),
             }).unknown(true),
         )
         .required(),
 }).unknown(true);
 
 export class WebhookServer extends Server {
-    private config;
+    private readonly config;
 
     constructor(config: BotConfig, bot: AlertBot) {
         super();
@@ -112,7 +112,10 @@ export class WebhookServer extends Server {
                 } catch (e: any) {
                     res.statusCode = 400;
                     res.end(JSON.stringify({ error: `Invalid JSON schema. ${e.message}.` }));
-                    logger.error({ facility, message: e.message });
+                    logger.error({
+                        facility,
+                        message: `client <${client.address}> json doesn't satisfy schema. ${e.message}.`,
+                    });
                     return;
                 }
 
