@@ -12,7 +12,7 @@ export type Alerts = {
               labels: Record<string, string>;
               annotations: Record<string, string>;
               startsAt: Date;
-              endsAt: Date | undefined;
+              endsAt: Date | null;
           }
         | Record<string, any>,
     ];
@@ -98,7 +98,16 @@ export class WebhookServer extends Server {
                 }
 
                 try {
-                    const validatedAlerts = await alertSchema.validateAsync(requestBody);
+                    const validatedAlerts = (await alertSchema.validateAsync(requestBody)) as Alerts;
+
+                    // Why don't they just use `null` 🥲?
+                    const grafanaUnresolvedDate = new Date('0001-01-01T00:00:00Z');
+                    validatedAlerts.alerts.forEach(alert => {
+                        if (alert.endsAt.getTime() == grafanaUnresolvedDate.getTime()) {
+                            alert.endsAt = null;
+                        }
+                    });
+
                     bot.sendNotifications(validatedAlerts);
                 } catch (e: any) {
                     res.statusCode = 400;

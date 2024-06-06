@@ -35,9 +35,9 @@ export class AlertBot extends Bot {
         const subscribers = await this.cache.getSubscriberChats();
         const alertMessageBodys = alerts.alerts.map(alert => {
             const title = `${alert.labels.alertname.trim()}`;
-            const status = `<b>[${alert.status.trim().toUpperCase()}]</b>: ${title}\n`;
-            const startsAt = `<b>[STARTED]</b>: ${alert.startsAt}\n`;
-            const endsAt = alert.endsAt ? `<b>[ENDED]</b>: ${alert.endsAt}\n` : '\n';
+            const status = `<b>[${alert.status.trim().toUpperCase()}]</b>: ${title}\n\n`;
+            const startsAt = `<b>[FIRED AT]</b>: ${alert.startsAt}\n\n`;
+            const endsAt = alert.endsAt ? `<b>[RESOLVED AT]</b>: ${alert.endsAt}\n\n` : '';
             const annotationsItems = Object.entries(alert.annotations)
                 .sort()
                 .map(
@@ -45,7 +45,7 @@ export class AlertBot extends Bot {
                         `<b>[${annotation[0].trim().toUpperCase()}]</b>\n${(annotation[1] as string).trim()}\n`,
                 )
                 .join('\n');
-            const message = [status, startsAt, endsAt, annotationsItems].join('\n');
+            const message = [status, startsAt, endsAt, annotationsItems].join('');
             console.log(message);
             return message;
         });
