@@ -56,7 +56,10 @@ export class WebhookServer extends Server {
             const client = req.socket.address() as AddressInfo;
             const method = req.method;
             const requestBodyParts: Buffer[] = [];
+            // Why don't they just use `null` 🥲?
+            const grafanaUnresolvedDate = new Date('0001-01-01T00:00:00Z');
             let requestBody: any;
+            let validatedAlerts: Alerts;
 
             res.setHeader('Content-Type', 'application/json');
 
@@ -98,17 +101,7 @@ export class WebhookServer extends Server {
                 }
 
                 try {
-                    const validatedAlerts = (await alertSchema.validateAsync(requestBody)) as Alerts;
-
-                    // Why don't they just use `null` 🥲?
-                    const grafanaUnresolvedDate = new Date('0001-01-01T00:00:00Z');
-                    validatedAlerts.alerts.forEach(alert => {
-                        if (alert.endsAt.getTime() == grafanaUnresolvedDate.getTime()) {
-                            alert.endsAt = null;
-                        }
-                    });
-
-                    bot.sendNotifications(validatedAlerts);
+                    validatedAlerts = (await alertSchema.validateAsync(requestBody)) as Alerts;
                 } catch (e: any) {
                     res.statusCode = 400;
                     res.end(JSON.stringify({ error: `Invalid JSON schema. ${e.message}.` }));
@@ -119,6 +112,16 @@ export class WebhookServer extends Server {
                     return;
                 }
 
+                // If the endsAt date is unresolved, use a more sane value — `null` — instead of an obscure date.
+                // Learn more about this field default value in the Grafana documentation:
+                // https://grafana.com/docs/grafana/latest/alerting/configure-notifications/manage-contact-points/integrations/webhook-notifier/#alert
+                validatedAlerts.alerts.forEach(alert => {
+                    if (alert.endsAt.getTime() == grafanaUnresolvedDate.getTime()) {
+                        alert.endsAt = null;
+                    }
+                });
+
+                bot.sendNotifications(validatedAlerts);
                 res.statusCode = 200;
                 res.end(JSON.stringify({ message: 'ok.' }));
                 logger.info({

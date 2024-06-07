@@ -2,7 +2,7 @@ import { Alerts } from './webhook.js';
 import { logger } from './log.js';
 import { BotConfig } from './config.js';
 import { Cache } from './cache.js';
-import { Bot, CommandContext, Context } from 'grammy';
+import { Bot, CommandContext, Context, GrammyError, HttpError } from 'grammy';
 
 type ChatType = 'group' | 'personal';
 const facility = 'bot';
@@ -20,10 +20,43 @@ export class AlertBot extends Bot {
     }
 
     async start() {
+        logger.info({ facility, message: 'starting bot' });
+
         this.userName = await this.getUsername();
         this.attachMiddlewares();
-        logger.info({ facility, message: 'starting bot' });
-        await super.start();
+
+        // TODO implement retry or fail.
+        try {
+            await super.start();
+        } catch (err: any) {
+            switch (err.constructor) {
+                case GrammyError: {
+                    logger.fatal({
+                        facility,
+                        message: `encountered an error from telegram api. ${(err as GrammyError).description}.`,
+                    });
+                    break;
+                }
+
+                case HttpError: {
+                    logger.fatal({
+                        facility,
+                        message: `encountered a network error while contacting telegram api. ${(err as HttpError).message}.`,
+                    });
+                    break;
+                }
+
+                default: {
+                    logger.fatal({
+                        facility,
+                        message: `encnountered an error of unknown type. ${(err as Error).message}.`,
+                    });
+                    break;
+                }
+            }
+
+            process.exit(1);
+        }
     }
 
     async stop() {
@@ -66,7 +99,7 @@ export class AlertBot extends Bot {
             botUser = await this.api.getMe();
             logger.info({ facility, message: `fetched bot username <${botUser.username}>` });
         } catch (e: any) {
-            logger.fatal({ facility, message: e.message });
+            logger.fatal({ facility, message: `could not fetch bot username. ${e.message}.` });
             process.exit(1);
         }
 
@@ -137,15 +170,14 @@ export class AlertBot extends Bot {
         const userId = ctx.chatId;
         const from = ctx.from;
         let isRequestAuthenticated = false;
-        let allowedUser!: number;
-        let disallowedUser!: number;
+        let allowedUser: number | null = null;
+        let disallowedUser: number | null = null;
 
         switch (chatType) {
             case 'personal': {
-                const userAllowed = this.isUserAllowed(userId);
-                isRequestAuthenticated = userAllowed;
+                isRequestAuthenticated = this.isUserAllowed(userId);
 
-                if (!userAllowed) {
+                if (!isRequestAuthenticated) {
                     disallowedUser = userId;
                 } else {
                     allowedUser = userId;
@@ -153,12 +185,12 @@ export class AlertBot extends Bot {
 
                 break;
             }
+
             case 'group': {
                 if (from) {
-                    const userAllowed = this.isUserAllowed(from.id);
-                    isRequestAuthenticated = userAllowed;
+                    isRequestAuthenticated = this.isUserAllowed(from.id);
 
-                    if (!userAllowed) {
+                    if (!isRequestAuthenticated) {
                         disallowedUser = from.id;
                     } else {
                         allowedUser = from.id;

@@ -31,7 +31,7 @@ export type BotConfig = {
 
 const defaultConfigPath = `${process.cwd()}/config/botconfig.toml`;
 const botConfigEnv = process.env['BOTCONFIG'];
-let configPath = botConfigEnv ? botConfigEnv : defaultConfigPath;
+const configPath = botConfigEnv ? botConfigEnv : defaultConfigPath;
 
 const configSchema = Joi.object({
     webhook: Joi.object({
