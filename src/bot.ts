@@ -14,12 +14,15 @@ export class AlertBot extends Bot {
     private readonly config;
     private readonly cache;
     private userName: string | null = null;
+    private serverRunning = true;
 
     constructor(config: BotConfig, cache: Cache) {
         super(config.bot.options.tg_token);
 
         this.config = config;
         this.cache = cache;
+
+        this.stopServerEmitter.on(this.stopServer, () => (this.serverRunning = false));
     }
 
     async start() {
@@ -69,7 +72,7 @@ export class AlertBot extends Bot {
     }
 
     private async pollQueueSendAlerts() {
-        while (true) {
+        while (this.serverRunning) {
             // node-redis lib seems to be buggy, and doesn't set this property to `true` on reconnect.
             // Maybe it's just me who can't get right how to work with it.
             if (this.cache.isReady) {
