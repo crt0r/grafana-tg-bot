@@ -141,18 +141,17 @@ export class AlertBot extends Bot {
         const filters = {
             groupChat: (ctx: CommandContext<Context>) => this.determineChatType(ctx) == 'group',
             personalChat: (ctx: CommandContext<Context>) => this.determineChatType(ctx) == 'personal',
-            authRequest: (ctx: CommandContext<Context>) => this.authenticateRequest(ctx),
         };
 
         this.command(`start@${this.userName}`)
             .filter(filters.groupChat)
-            .filter(filters.authRequest, this.subscribeChat(true));
+            .filter(this.authenticateRequest, this.subscribeChat(true));
         this.command(`stop@${this.userName}`)
             .filter(filters.groupChat)
-            .filter(filters.authRequest, this.unsubscribeChat(true));
+            .filter(this.authenticateRequest, this.unsubscribeChat(true));
 
-        this.command('start').filter(filters.personalChat).filter(filters.authRequest, this.subscribeChat());
-        this.command('stop').filter(filters.personalChat).filter(filters.authRequest, this.unsubscribeChat());
+        this.command('start').filter(filters.personalChat).filter(this.authenticateRequest, this.subscribeChat());
+        this.command('stop').filter(filters.personalChat).filter(this.authenticateRequest, this.unsubscribeChat());
     }
 
     private subscribeChat(replyTo = false) {
