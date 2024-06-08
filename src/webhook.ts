@@ -1,4 +1,4 @@
-import { AlertBot } from './bot.js';
+import { Cache } from './cache.js';
 import { BotConfig } from './config.js';
 import { logger } from './log.js';
 import { AddressInfo } from 'node:net';
@@ -37,7 +37,7 @@ const alertSchema = Joi.object({
 export class WebhookServer extends Server {
     private readonly config;
 
-    constructor(config: BotConfig, bot: AlertBot) {
+    constructor(config: BotConfig, cache: Cache) {
         super();
 
         this.config = config;
@@ -121,7 +121,7 @@ export class WebhookServer extends Server {
                     }
                 });
 
-                bot.sendNotifications(validatedAlerts);
+                await cache.queuePush(validatedAlerts);
                 res.statusCode = 200;
                 res.end(JSON.stringify({ message: 'ok.' }));
                 logger.info({

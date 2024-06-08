@@ -3,11 +3,14 @@ import { logger } from './log.js';
 import { BotConfig } from './config.js';
 import { Cache } from './cache.js';
 import { Bot, CommandContext, Context, GrammyError, HttpError } from 'grammy';
+import { EventEmitter } from 'node:events';
 
 type ChatType = 'group' | 'personal';
 const facility = 'bot';
 
 export class AlertBot extends Bot {
+    private readonly stopServer = 'stopserver';
+    private readonly stopServerEmitter = new EventEmitter();
     private readonly config;
     private readonly cache;
     private userName: string | null = null;
@@ -22,11 +25,11 @@ export class AlertBot extends Bot {
     async start() {
         logger.info({ facility, message: 'starting bot' });
 
-        this.userName = await this.getUsername();
-        this.attachMiddlewares();
-
         // TODO implement retry or fail.
         try {
+            this.userName = await this.getUsername();
+            this.attachMiddlewares();
+            this.pollQueueSendAlerts();
             await super.start();
         } catch (err: any) {
             switch (err.constructor) {
@@ -49,7 +52,7 @@ export class AlertBot extends Bot {
                 default: {
                     logger.fatal({
                         facility,
-                        message: `encnountered an error of unknown type. ${(err as Error).message}.`,
+                        message: `encnountered an error. ${(err as Error).message}.`,
                     });
                     break;
                 }
@@ -60,8 +63,26 @@ export class AlertBot extends Bot {
     }
 
     async stop() {
+        this.stopServerEmitter.emit(this.stopServer);
         await super.stop();
         logger.info({ facility, message: 'bot stopped' });
+    }
+
+    private async pollQueueSendAlerts() {
+        while (true) {
+            // node-redis lib seems to be buggy, and doesn't set this property to `true` on reconnect.
+            // Maybe it's just me who can't get right how to work with it.
+            if (this.cache.isReady) {
+                const alerts = await this.cache.queuePop();
+
+                if (alerts) {
+                    logger.info({ facility, message: 'sending out alerts to subscribers' });
+                    this.sendNotifications(alerts);
+                }
+
+                await this.waitSeconds(this.config.bot.options.alert_queue_poll_interval);
+            }
+        }
     }
 
     async sendNotifications(alerts: Alerts) {
@@ -84,11 +105,19 @@ export class AlertBot extends Bot {
         });
 
         subscribers.forEach(subscriber =>
-            alertMessageBodys.forEach(messageBody =>
+            alertMessageBodys.forEach(async messageBody => {
+                const chatType = this.determineChatType(subscriber);
+                const waitTime =
+                    chatType == 'personal'
+                        ? this.config.bot.options.send_alert_interval
+                        : this.config.bot.options.send_alert_group_interval;
+
                 this.api.sendMessage(subscriber, messageBody, {
                     parse_mode: 'HTML',
-                }),
-            ),
+                });
+
+                await this.waitSeconds(waitTime as number);
+            }),
         );
     }
 
@@ -97,7 +126,6 @@ export class AlertBot extends Bot {
 
         try {
             botUser = await this.api.getMe();
-            logger.info({ facility, message: `fetched bot username <${botUser.username}>` });
         } catch (e: any) {
             logger.fatal({ facility, message: `could not fetch bot username. ${e.message}.` });
             process.exit(1);
@@ -216,11 +244,29 @@ export class AlertBot extends Bot {
         return isRequestAuthenticated;
     }
 
-    private determineChatType(ctx: CommandContext<Context>): ChatType {
-        return ctx.chatId > 0 ? 'personal' : 'group';
+    private determineChatType(target: CommandContext<Context> | number): ChatType {
+        const chatType = (chatId: number) => (chatId > 0 ? 'personal' : 'group');
+
+        if (typeof target == 'number') {
+            return chatType(target);
+        }
+
+        return chatType(target.chatId);
     }
 
     private isUserAllowed(userId: number): boolean {
         return this.config.bot.acl.allow_tg_uid.includes(userId);
+    }
+
+    private async waitSeconds(seconds: number) {
+        await new Promise((resolve, reject) => {
+            this.stopServerEmitter.on(this.stopServer, () => {
+                reject();
+            });
+
+            setTimeout(resolve, seconds * 1000);
+        }).catch(_ => {});
+
+        this.stopServerEmitter.removeAllListeners();
     }
 }

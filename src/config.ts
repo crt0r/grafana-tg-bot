@@ -25,6 +25,9 @@ export type BotConfig = {
         };
         options: {
             tg_token: string;
+            alert_queue_poll_interval: number;
+            send_alert_interval: number;
+            send_alert_group_interval: number | 'default';
         };
     };
 };
@@ -52,6 +55,9 @@ const configSchema = Joi.object({
         }),
         options: Joi.object({
             tg_token: Joi.string(),
+            alert_queue_poll_interval: Joi.number().positive(),
+            send_alert_interval: Joi.number().positive(),
+            send_alert_group_interval: Joi.alternatives(Joi.number().positive(), Joi.string().equal('default')),
         }),
     }),
 });
@@ -73,6 +79,10 @@ export async function loadConfig(canBeFatal: boolean): Promise<BotConfig | null>
         } else {
             logger.error(errorMessage);
         }
+    }
+
+    if (botConfig?.bot.options.send_alert_group_interval == 'default') {
+        botConfig.bot.options.send_alert_group_interval = botConfig.bot.options.send_alert_interval;
     }
 
     return botConfig;
