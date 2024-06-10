@@ -6,9 +6,9 @@
     "main": "build/main.js",
     "scripts": {
         "build": "rm -rf build/ || true && tsc",
-        "start": "node build/main.js",
+        "_devstart": "node build/main.js",
         "reload": "kill -HUP $(pidof node)",
-        "dev": "pnpm -s build && pnpm -s start"
+        "dev": "pnpm -s build && pnpm -s _devstart"
     },
     "author": "Timofey Chuchkanov",
     "license": "0BSD",
