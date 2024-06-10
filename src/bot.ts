@@ -73,18 +73,16 @@ export class AlertBot extends Bot {
 
     private async pollQueueSendAlerts() {
         while (this.serverRunning) {
-            // node-redis lib seems to be buggy, and doesn't set this property to `true` on reconnect.
-            // Maybe it's just me who can't get right how to work with it.
-            if (this.cache.isReady) {
+            if (this.cache.status == 'ready') {
                 const alerts = await this.cache.queuePop();
 
                 if (alerts) {
                     logger.info({ facility, message: 'sending out alerts to subscribers' });
                     this.sendNotifications(alerts);
                 }
-
-                await this.waitSeconds(this.config.bot.options.alert_queue_poll_interval);
             }
+
+            await this.waitSeconds(this.config.bot.options.alert_queue_poll_interval);
         }
     }
 
@@ -107,7 +105,7 @@ export class AlertBot extends Bot {
             return message;
         });
 
-        subscribers.forEach(subscriber =>
+        subscribers?.forEach(subscriber =>
             alertMessageBodys.forEach(async messageBody => {
                 const chatType = this.determineChatType(subscriber);
                 const waitTime =

@@ -121,7 +121,15 @@ export class WebhookServer extends Server {
                     }
                 });
 
-                await cache.queuePush(validatedAlerts);
+                const pushed = await cache.queuePush(validatedAlerts);
+
+                if (!pushed) {
+                    res.statusCode = 500;
+                    res.end(JSON.stringify({ message: 'could not add alerts to queue.' }));
+                    logger.error(`dropped request for client <${client.address}> due to cache error.`);
+                    return;
+                }
+
                 res.statusCode = 200;
                 res.end(JSON.stringify({ message: 'ok.' }));
                 logger.info({

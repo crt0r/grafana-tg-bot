@@ -8,8 +8,8 @@ async function reloadConfig() {
 
     if (newConfig) {
         config = newConfig;
-        const oldBot = bot;
         const oldCache = cache;
+        const oldBot = bot;
         const oldWebHook = webHook;
 
         cache = new Cache(config);
@@ -17,10 +17,9 @@ async function reloadConfig() {
         webHook = new WebhookServer(config, cache);
 
         oldWebHook.close();
-        await oldCache.quit();
         await oldBot.stop();
+        await oldCache.quit();
 
-        await cache.connect();
         webHook.listen();
         await bot.start();
     }
@@ -36,11 +35,10 @@ process.on('SIGHUP', reloadConfig);
 ['SIGINT', 'SIGTERM'].forEach(signal =>
     process.on(signal, async () => {
         webHook.close();
-        await cache.quit();
         await bot.stop();
+        await cache.quit();
     }),
 );
 
-await cache.connect();
 webHook.listen();
 await bot.start();

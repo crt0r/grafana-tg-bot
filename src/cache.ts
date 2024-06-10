@@ -1,76 +1,77 @@
 import { logger } from './log.js';
 import { BotConfig } from './config.js';
 import { Alerts } from './webhook.js';
-import { createClient } from '@redis/client'; // TODO migrate to ioredis since it has a much better (documented, even!) API
+import { Redis, RedisOptions } from 'ioredis';
 
 const facility = 'cache';
 
-export class Cache {
+export class Cache extends Redis {
     private readonly subscribersKey = 'alert_subscribers';
     private readonly messageQueueKey = 'alerts_queue';
-    private readonly config;
-    private readonly client;
+    private readonly botConfig;
 
     constructor(config: BotConfig) {
-        this.config = config;
+        super({ host: config.cache.server.host, port: config.cache.server.port });
+        this.botConfig = config;
 
-        this.client = createClient({
-            url: this.config.cache.server.url,
-        });
-
-        this.client
-            .on('error', err => logger.error({ facility, message: err.message }))
-            .on('ready', _ => logger.info({ facility, message: 'cache is ready' }))
-            .on('end', _ => logger.info({ facility, message: 'disconnected from cache' }));
-    }
-
-    get isReady() {
-        return this.client.isReady;
-    }
-
-    async connect() {
-        await this.client.connect();
-    }
-
-    async quit() {
-        // Prevent crash on stop when cache is not available
-        try {
-            return await this.client.quit();
-        } catch (_) {}
+        this.on('error', err => logger.error({ facility, message: err.message }));
     }
 
     async queuePush(alerts: Alerts) {
-        return await this.client.LPUSH(this.messageQueueKey, JSON.stringify(alerts));
+        try {
+            return await this.lpush(this.messageQueueKey, JSON.stringify(alerts));
+        } catch (e: any) {
+            logger.error({ facility, message: e.message });
+            return null;
+        }
     }
 
-    async queuePop(): Promise<Alerts | null> {
+    async queuePop() {
         try {
-            const response = await this.client.RPOP(this.messageQueueKey);
-
+            const response = await this.rpop(this.messageQueueKey);
             if (response) {
                 return JSON.parse(response);
             }
         } catch (e: any) {
             logger.error({ facility, message: e.message });
+            return null;
         }
-
-        return null;
     }
 
     async addSubscriberChat(chatId: number) {
-        return await this.client.SADD(this.subscribersKey, chatId.toString());
+        try {
+            return await this.sadd(this.subscribersKey, chatId.toString());
+        } catch (e: any) {
+            logger.error({ facility, message: e.message });
+            return null;
+        }
     }
 
     async delSubscriberChat(chatId: number) {
-        return await this.client.SREM(this.subscribersKey, chatId.toString());
+        try {
+            return await this.srem(this.subscribersKey, chatId.toString());
+        } catch (e: any) {
+            logger.error({ facility, message: e.message });
+            return null;
+        }
     }
 
-    async getSubscriberChats(): Promise<number[]> {
-        const subscribersStr = await this.client.SMEMBERS(this.subscribersKey);
-        return subscribersStr.map(subscriber => Number.parseInt(subscriber));
+    async getSubscriberChats(): Promise<number[] | null> {
+        try {
+            const subscribersStr = await this.smembers(this.subscribersKey);
+            return subscribersStr.map(subscriber => Number.parseInt(subscriber));
+        } catch (e: any) {
+            logger.error({ facility, message: e.message });
+            return null;
+        }
     }
 
     async isChatSubscribedToAlerts(chatId: number) {
-        return await this.client.SISMEMBER(this.subscribersKey, chatId.toString());
+        try {
+            return await this.sismember(this.subscribersKey, chatId.toString());
+        } catch (e: any) {
+            logger.error({ facility, message: e.message });
+            return null;
+        }
     }
 }

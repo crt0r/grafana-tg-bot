@@ -16,7 +16,8 @@ export type BotConfig = {
     };
     cache: {
         server: {
-            url: string;
+            host: string;
+            port: number;
         };
     };
     bot: {
@@ -46,7 +47,8 @@ const configSchema = Joi.object({
     }),
     cache: Joi.object({
         server: Joi.object({
-            url: Joi.string(),
+            host: Joi.string(),
+            port: Joi.number(),
         }),
     }),
     bot: Joi.object({
