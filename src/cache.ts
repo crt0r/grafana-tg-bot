@@ -1,7 +1,7 @@
 import { logger } from './log.js';
 import { BotConfig } from './config.js';
 import { Alerts } from './webhook.js';
-import { Redis, RedisOptions } from 'ioredis';
+import { Redis } from 'ioredis';
 
 const facility = 'cache';
 
@@ -11,8 +11,16 @@ export class Cache extends Redis {
     private readonly botConfig;
 
     constructor(config: BotConfig) {
-        super({ host: config.cache.server.host, port: config.cache.server.port });
+        super({ lazyConnect: true });
+
         this.botConfig = config;
+        this.options.host = this.botConfig.cache.server.host;
+        this.options.port = this.botConfig.cache.server.port;
+
+        if (this.botConfig.cache.auth.enabled) {
+            this.options.username = this.botConfig.cache.auth.user;
+            this.options.password = this.botConfig.cache.auth.password;
+        }
 
         this.on('error', err => logger.error({ facility, message: err.message }));
     }

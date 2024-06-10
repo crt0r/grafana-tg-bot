@@ -19,6 +19,11 @@ export type BotConfig = {
             host: string;
             port: number;
         };
+        auth: {
+            enabled: boolean;
+            user: string;
+            password: string;
+        };
     };
     bot: {
         acl: {
@@ -49,6 +54,11 @@ const configSchema = Joi.object({
         server: Joi.object({
             host: Joi.string(),
             port: Joi.number(),
+        }),
+        auth: Joi.object({
+            enabled: Joi.boolean(),
+            user: Joi.string(),
+            password: Joi.string(),
         }),
     }),
     bot: Joi.object({
