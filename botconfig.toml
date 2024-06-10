@@ -3,9 +3,18 @@ allow_tg_uid = [1000]
 
 [bot.options]
 tg_token = "token"
+alert_queue_poll_interval = 15
+send_alert_interval = 1
+send_alert_group_interval = "default"
 
 [cache.server]
-url = "redis://cache:6379"
+host = "cache"
+port = 6379
+
+[cache.auth]
+enabled = false
+user = "gtg-bot"
+password = "password"
 
 [webhook.server]
 host = "0.0.0.0"
