@@ -1,3 +1,4 @@
+import { writePid } from './pid.js';
 import { BotConfig, loadConfig } from './config.js';
 import { AlertBot } from './bot.js';
 import { Cache } from './cache.js';
@@ -40,5 +41,6 @@ process.on('SIGHUP', reloadConfig);
     }),
 );
 
+await writePid();
 webHook.listen();
 await bot.start();

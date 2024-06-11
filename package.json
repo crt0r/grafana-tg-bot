@@ -1,13 +1,13 @@
 {
     "name": "grafana-tg-bot",
     "type": "module",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "",
     "main": "build/main.js",
     "scripts": {
         "build": "rm -rf build/ || true && tsc",
         "_devstart": "node build/main.js",
-        "reload": "kill -HUP $(pidof node)",
+        "reload": "kill -HUP $(cat gtg-bot.pid)",
         "dev": "pnpm -s build && pnpm -s _devstart"
     },
     "author": "Timofey Chuchkanov",

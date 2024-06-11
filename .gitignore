@@ -2,3 +2,4 @@ config/
 build/
 node_modules/
 .env
+gtg-bot.pid
