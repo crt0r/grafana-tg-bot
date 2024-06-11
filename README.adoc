@@ -39,7 +39,7 @@ You can set environment variables to change the program's behavior.
 a|
 [,typescript]
 ----
-include::src/config.ts[lines=42]
+`${getProjectRoot()}/config/botconfig.toml`
 ----
 |===
 
