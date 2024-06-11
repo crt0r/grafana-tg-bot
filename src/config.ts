@@ -1,3 +1,4 @@
+import { getProjectRoot } from './common.js';
 import { logger } from './log.js';
 import fs from 'node:fs/promises';
 import process from 'node:process';
@@ -38,7 +39,7 @@ export type BotConfig = {
     };
 };
 
-const defaultConfigPath = `${process.cwd()}/config/botconfig.toml`;
+const defaultConfigPath = `${getProjectRoot()}/config/botconfig.toml`;
 const botConfigEnv = process.env['BOTCONFIG'];
 const configPath = botConfigEnv ? botConfigEnv : defaultConfigPath;
 
