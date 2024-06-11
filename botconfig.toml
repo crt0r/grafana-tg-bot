@@ -1,10 +1,23 @@
 [bot.acl]
-allow_tg_uid = [1000]
+# A list of unique Telegram user IDs.
+allow_tg_uid = [
+    1000, # <- Don't forget to replace this random ID with your own.
+] # These users are allowed to issue bot commands even in group chats. Any other users will be ignored.
 
 [bot.options]
+# Your Telegram bot token, see https://core.telegram.org/bots/tutorial.
 tg_token = "token"
+
+# All ..._interval fields take non-negative numbers representing seconds.
+
+# How often to check for new alerts in the message queue.
 alert_queue_poll_interval = 15
+
+# An interval between sending each alert. You might need to tune this in order to not abuse Telegram servers
+# and get rate-limited.
 send_alert_interval = 1
+
+# If set to "default", will be equal to send_alert_interval.
 send_alert_group_interval = "default"
 
 [cache.server]
@@ -12,11 +25,15 @@ host = "cache"
 port = 6379
 
 [cache.auth]
+# When not enabled, will authenticate as the default user in a passwordless manner.
 enabled = false
 user = "gtg-bot"
 password = "password"
 
 [webhook.server]
+# Address and port to start an HTTP server on.
 host = "0.0.0.0"
 port = 8080
+
+# Your webhook endpoint for receiving alerts from Grafana.
 endpoint = "/grafana-alerts-notify"

@@ -1,0 +1,64 @@
+= Send Webhook-based Grafana Alerts via Telegram
+:toc:
+:toc-title: Contents
+
+[%collapsible,title=Prerequisites]
+====
+NOTE: If you are planning to run it in Docker, ignore this list.
+
+- Node.js latest
+- pnpm
+====
+
+== Build From Source
+[,console]
+----
+$ pnpm build
+----
+
+== Configure
+. Copy the example configuration file _botconfig.toml_ to a new directory _./config_.
+. Edit config.
+
+== Run
+NOTE: Don't run using pnpm. It breaks signal handling.
+
+[,console]
+----
+$ node build/main.js
+----
+
+=== Environment
+You can set environment variables to change the program's behavior.
+
+|===
+|Variable |Used for |Default
+
+|BOTCONFIG
+|Change config file path.
+a|
+[,typescript]
+----
+include::src/config.ts[lines=42]
+----
+|===
+
+== Reload Config
+To reload configuration, send the `SIGHUP` signal to the process.
+
+=== Example 1
+
+[,console]
+----
+$ pnpm reload
+----
+
+=== Example 2
+
+[,console]
+----
+$ kill -HUP <PID here> # You can use something like $(pidof node) if there's only one Node.js process.
+----
+
+== License
+link:./LICENSE[0BSD]
