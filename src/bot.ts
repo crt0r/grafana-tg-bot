@@ -143,13 +143,17 @@ export class AlertBot extends Bot {
 
         this.command(`start@${this.userName}`)
             .filter(filters.groupChat)
-            .filter(this.authenticateRequest, this.subscribeChat(true));
+            .filter(ctx => this.authenticateRequest(ctx), this.subscribeChat(true));
         this.command(`stop@${this.userName}`)
             .filter(filters.groupChat)
-            .filter(this.authenticateRequest, this.unsubscribeChat(true));
+            .filter(ctx => this.authenticateRequest(ctx), this.unsubscribeChat(true));
 
-        this.command('start').filter(filters.personalChat).filter(this.authenticateRequest, this.subscribeChat());
-        this.command('stop').filter(filters.personalChat).filter(this.authenticateRequest, this.unsubscribeChat());
+        this.command('start')
+            .filter(filters.personalChat)
+            .filter(ctx => this.authenticateRequest(ctx), this.subscribeChat());
+        this.command('stop')
+            .filter(filters.personalChat)
+            .filter(ctx => this.authenticateRequest(ctx), this.unsubscribeChat());
     }
 
     private subscribeChat(replyTo = false) {
