@@ -4,6 +4,8 @@
 
 WARNING: This is an experimental piece of software. Don't use in production.
 
+NOTE: The webhook endpoint doesn't support auth and encryption. If you need HTTPS and auth, use a reverse proxy.
+
 [%collapsible,title=Prerequisites]
 ====
 NOTE: If you are planning to run it in Docker, ignore this list.
@@ -11,6 +13,34 @@ NOTE: If you are planning to run it in Docker, ignore this list.
 - Node.js latest
 - pnpm
 ====
+
+== Features
+* Access control based on Telegram UIDs
+* Multiple chats can be subscribed simultaneously
+* Both private chats and group chats can be subscribed to alerts
+* Unauthorized users are ignored
+* Arbitrary messages and unrecognized commands are ignored
+* Unauthorized access to valid bot commands is logged
+* Grafana interacts with the bot via a webhook endpoint
+
+== Demo
+[%collapsible,title=Example Screenshots]
+====
+image::assets/Screenshot_20240617-161101.png[]
+image::assets/Screenshot_20240617-161126.png[]
+====
+
+[%collapsible,title=Example Video]
+====
+video::assets/screencast.mp4[]
+====
+
+== Build From Source
+[,console]
+----
+$ pnpm build
+----
+
 
 == Build From Source
 [,console]
@@ -61,6 +91,23 @@ $ pnpm reload
 ----
 $ kill -HUP <PID here> # You can use something like $(pidof node) if there's only one Node.js process.
 ----
+
+== Connect Grafana
+. Create a webhook contact point pointing to your bot instance
+. Make sure it uses the POST method
+
+image::assets/contact-point.png[]
+
+== Sub/unsub to Alerts
+=== Subscribe
+Group Chat::
+    Add the bot to a chat just like a regular user, and issue the _/start@bot_name_ command.
+
+Personal Chat::
+    Open a chat with the bot, and press the _start_ button.
+
+=== Unsubscribe
+Same as above, but the command is _/stop@bot_name_ or _/stop_ depending on the chat type.
 
 == License
 link:./LICENSE[0BSD]
