@@ -2,6 +2,8 @@
 :toc:
 :toc-title: Contents
 
+WARNING: This is an experimental piece of software. Don't use in production.
+
 [%collapsible,title=Prerequisites]
 ====
 NOTE: If you are planning to run it in Docker, ignore this list.
