@@ -18,6 +18,8 @@ NOTE: If you are planning to run it in Docker, ignore this list.
 * Access control based on Telegram UIDs
 * Multiple chats can be subscribed simultaneously
 * Both private chats and group chats can be subscribed to alerts
++
+NOTE: The user interacting with the bot in a group chat must be added to the ACL, but not the group chat itself.
 * Unauthorized users are ignored
 * Arbitrary messages and unrecognized commands are ignored
 * Unauthorized access to valid bot commands is logged
