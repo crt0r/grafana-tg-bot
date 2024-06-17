@@ -32,7 +32,7 @@ image::assets/Screenshot_20240617-161126.png[]
 
 [%collapsible,title=Example Video]
 ====
-video::assets/screencast.mp4[]
+link:assets/screencast.mp4[]
 ====
 
 == Build From Source
