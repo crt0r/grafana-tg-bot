@@ -18,8 +18,11 @@ services:
     image: valkey/valkey:7.2.5-alpine3.19
     pull_policy: missing
     restart: unless-stopped
-    cap_add:
+    cap_drop:
     - ALL
+    cap_add:
+    - SETUID
+    - SETGID
     volumes:
     - cache-data:/data
 
