@@ -1,4 +1,5 @@
 FROM node:current-alpine AS base
+RUN adduser -D gtg-bot
 RUN mkdir /app
 WORKDIR /app
 RUN npm install -g pnpm
@@ -15,4 +16,5 @@ WORKDIR /app
 COPY --from=build /app/build ./build
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
+USER gtg-bot
 ENTRYPOINT [ "node", "build/main.js" ]
