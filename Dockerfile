@@ -16,5 +16,6 @@ WORKDIR /app
 COPY --from=build /app/build ./build
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
+RUN chown -R gtg-bot: /app
 USER gtg-bot
 ENTRYPOINT [ "node", "build/main.js" ]
