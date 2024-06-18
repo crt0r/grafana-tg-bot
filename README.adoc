@@ -2,13 +2,13 @@
 :toc:
 :toc-title: Contents
 
-WARNING: This is an experimental piece of software. Don't use in production.
+WARNING: This is an experimental prototype, a proof of concept. Don't use in production. A lot of things don't work as expected, and extensive testing is still needed.
 
 NOTE: The webhook endpoint doesn't support auth and encryption. If you need HTTPS and auth, use a reverse proxy.
 
 [%collapsible,title=Prerequisites]
 ====
-NOTE: If you are planning to run it in Docker, ignore this list.
+NOTE: If you are planning to run it in Docker containers, ignore this list. See _Dockerfile_ and _compose.yml_.
 
 - Node.js latest
 - Redis-compatible in-memory database (I prefer Valkey)
@@ -25,7 +25,7 @@ NOTE: The user interacting with the bot in a group chat must be added to the ACL
 * Arbitrary messages and unrecognized commands are ignored
 * Unauthorized access to valid bot commands is logged
 * Grafana interacts with the bot via a webhook endpoint
-* Style messages with Telegram-supported HTML tags (the bot doesn't support Markdown).
+* Style messages with Telegram-supported HTML tags (the bot doesn't support Markdown)
 
 == Demo
 Suppose, you use ClickHouse as a data warehouse for your logs, and it's connected to your Grafana instance as a data source.
@@ -126,3 +126,6 @@ link:./LICENSE[0BSD]
 * Catch Grammy errors
 * Make queues reliable
 * Send out messages with time represented in a local timezone instead of UTC
+* Improve cache error handling, fix infinite frequent retries on wrong user/password
+* Improve logging, revert cache connect and disconnect logging
+* Improve config validation
