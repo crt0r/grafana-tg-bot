@@ -44,7 +44,7 @@ image::assets/Screenshot_20240617-161126.png[width=512]
 
 [%collapsible,title=Another Example for Sudo Alerts]
 ====
-image::assets/Screenshot_20240617-161101.png[]
+image::assets/Screenshot_20240617-161101.png[width=512]
 ====
 
 [%collapsible,title=Example Video]
@@ -106,7 +106,7 @@ $ kill -HUP <PID here> # You can use something like $(pidof node) if there's onl
 . Create a webhook contact point pointing to your bot instance
 . Make sure it uses the POST method
 
-image::assets/contact-point.png[]
+image::assets/contact-point.png[width=512]
 
 == Sub/unsub to Alerts
 === Subscribe
