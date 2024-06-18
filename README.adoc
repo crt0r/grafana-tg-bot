@@ -11,6 +11,7 @@ NOTE: The webhook endpoint doesn't support auth and encryption. If you need HTTP
 NOTE: If you are planning to run it in Docker, ignore this list.
 
 - Node.js latest
+- Redis-compatible in-memory database (I prefer Valkey)
 - pnpm
 ====
 
@@ -24,12 +25,26 @@ NOTE: The user interacting with the bot in a group chat must be added to the ACL
 * Arbitrary messages and unrecognized commands are ignored
 * Unauthorized access to valid bot commands is logged
 * Grafana interacts with the bot via a webhook endpoint
+* Style messages with Telegram-supported HTML tags (the bot doesn't support Markdown).
 
 == Demo
-[%collapsible,title=Example Screenshots]
+Suppose, you use ClickHouse as a data warehouse for your logs, and it's connected to your Grafana instance as a data source.
+
+You have created an alert rule with the following SQL query:
+
+image::assets/Screenshot 2024-06-18 095726_101238.png[width=512]
+
+And annotations look like the following:
+
+image::assets/Screenshot 2024-06-18 100320_101234.png[width=512]
+
+When the alert rule is triggered, all subscribed Telegram chats will get messages similar to this:
+
+image::assets/Screenshot_20240617-161126.png[width=512]
+
+[%collapsible,title=Another Example for Sudo Alerts]
 ====
 image::assets/Screenshot_20240617-161101.png[]
-image::assets/Screenshot_20240617-161126.png[]
 ====
 
 [%collapsible,title=Example Video]
@@ -110,3 +125,4 @@ link:./LICENSE[0BSD]
 == To Do
 * Catch Grammy errors
 * Make queues reliable
+* Send out messages with time represented in a local timezone instead of UTC
