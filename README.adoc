@@ -43,13 +43,6 @@ link:assets/screencast.mp4[]
 $ pnpm build
 ----
 
-
-== Build From Source
-[,console]
-----
-$ pnpm build
-----
-
 == Configure
 . Copy the example configuration file _botconfig.toml_ to a new directory _./config_.
 . Edit config.
